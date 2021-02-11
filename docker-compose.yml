@@ -53,6 +53,7 @@ services:
       - broker
     ports:
       - "8080:8080"
+    restart: always
     environment: 
       - AIRFLOW__CORE__DAGS_FOLDER=${AIRFLOW__CORE__DAGS_FOLDER}
       - AIRFLOW__CORE__PLUGINS_FOLDER=${AIRFLOW__CORE__PLUGINS_FOLDER}
@@ -62,3 +63,20 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=${AIRFLOW__CORE__LOAD_EXAMPLES}
       - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
     entrypoint: ['bash', 'entrypoint.sh']
+  
+  scheduler:
+    hostname: 'scheduler'
+    container_name: 'scheduler'
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: schedular
+    depends_on: 
+      - airflow
+    restart: always
+    environment: 
+      - AIRFLOW__CORE__LOAD_EXAMPLES=${AIRFLOW__CORE__LOAD_EXAMPLES}
+      - AIRFLOW__CORE__EXECUTOR=${AIRFLOW__CORE__EXECUTOR}
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
+    command: bash -c "airflow scheduler"
