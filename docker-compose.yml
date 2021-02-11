@@ -25,7 +25,7 @@ services:
     hostname: 'celery'
     container_name: 'celery'
     build:
-      context: airflow/
+      context: .
       dockerfile: Dockerfile
     image: celery:5
     depends_on: 
@@ -45,7 +45,7 @@ services:
     hostname: 'airflow'
     container_name: 'airflow'
     build:
-      context: airflow/
+      context: .
       dockerfile: Dockerfile
     image: airflow:2.0.1
     depends_on: 
