@@ -104,7 +104,7 @@ services:
       - AIRFLOW__CELERY__RESULT_BACKEND=${AIRFLOW__CELERY__RESULT_BACKEND}
     volumes: 
       - dags:${AIRFLOW__CORE__DAGS_FOLDER}
-    command: bash -c "airflow celery worker"
+    command: bash -c "airflow celery worker --pid=${AIRFLOW_HOME}/airflow-worker-1.pid"
   
   worker_2:
     hostname: 'worker_2'
@@ -126,7 +126,7 @@ services:
       - AIRFLOW__CELERY__RESULT_BACKEND=${AIRFLOW__CELERY__RESULT_BACKEND}
     volumes: 
       - dags:${AIRFLOW__CORE__DAGS_FOLDER}
-    command: bash -c "airflow celery worker"
+    command: bash -c "airflow celery worker --pid=${AIRFLOW_HOME}/airflow-worker-2.pid"
 
 volumes: 
   dags:
