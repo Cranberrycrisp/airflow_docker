@@ -35,11 +35,12 @@ services:
       - 5555:5555
     environment: 
       - AIRFLOW__CORE__EXECUTOR=${AIRFLOW__CORE__EXECUTOR}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
       - AIRFLOW__CELERY__CELERY_APP_NAME=${AIRFLOW__CELERY__CELERY_APP_NAME}
       - AIRFLOW__CELERY__BROKER_URL=${AIRFLOW__CELERY__BROKER_URL}
       - AIRFLOW__CELERY__WORKER_CONCURRENCY=${AIRFLOW__CELERY__WORKER_CONCURRENCY}
       - AIRFLOW__CELERY__RESULT_BACKEND=${AIRFLOW__CELERY__RESULT_BACKEND}
-    command: flower
+    command: bash -c "airflow celery flower"
   
   airflow:
     hostname: 'airflow'
@@ -62,6 +63,8 @@ services:
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
       - AIRFLOW__CORE__LOAD_EXAMPLES=${AIRFLOW__CORE__LOAD_EXAMPLES}
       - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+    volumes: 
+      - dags:${AIRFLOW__CORE__DAGS_FOLDER}
     entrypoint: ['bash', 'entrypoint.sh']
   
   scheduler:
@@ -80,3 +83,50 @@ services:
       - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
       - AIRFLOW__CORE__SQL_ALCHEMY_CONN=${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
     command: bash -c "airflow scheduler"
+
+  worker_1:
+    hostname: 'worker_1'
+    container_name: 'worker_1'
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: worker
+    depends_on: 
+      - scheduler
+    restart: always
+    environment: 
+      - AIRFLOW__CORE__EXECUTOR=${AIRFLOW__CORE__EXECUTOR}
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
+      - AIRFLOW__CELERY__CELERY_APP_NAME=${AIRFLOW__CELERY__CELERY_APP_NAME}
+      - AIRFLOW__CELERY__BROKER_URL=${AIRFLOW__CELERY__BROKER_URL}
+      - AIRFLOW__CELERY__WORKER_CONCURRENCY=${AIRFLOW__CELERY__WORKER_CONCURRENCY}
+      - AIRFLOW__CELERY__RESULT_BACKEND=${AIRFLOW__CELERY__RESULT_BACKEND}
+    volumes: 
+      - dags:${AIRFLOW__CORE__DAGS_FOLDER}
+    command: bash -c "airflow celery worker"
+  
+  worker_2:
+    hostname: 'worker_2'
+    container_name: 'worker_2'
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: worker
+    depends_on: 
+      - scheduler
+    restart: always
+    environment: 
+      - AIRFLOW__CORE__EXECUTOR=${AIRFLOW__CORE__EXECUTOR}
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
+      - AIRFLOW__CELERY__CELERY_APP_NAME=${AIRFLOW__CELERY__CELERY_APP_NAME}
+      - AIRFLOW__CELERY__BROKER_URL=${AIRFLOW__CELERY__BROKER_URL}
+      - AIRFLOW__CELERY__WORKER_CONCURRENCY=${AIRFLOW__CELERY__WORKER_CONCURRENCY}
+      - AIRFLOW__CELERY__RESULT_BACKEND=${AIRFLOW__CELERY__RESULT_BACKEND}
+    volumes: 
+      - dags:${AIRFLOW__CORE__DAGS_FOLDER}
+    command: bash -c "airflow celery worker"
+
+volumes: 
+  dags:
