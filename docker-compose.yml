@@ -1,0 +1,64 @@
+version: '3.3'
+services:
+  mysql:
+    hostname: 'mysql'
+    container_name: 'mysql'
+    image: mysql/mysql-server:${MYSQL_VERSION}
+    restart: always
+    ports: 
+      - 3306:3306
+      - 33060:33060
+    environment: 
+      - MYSQL_DATABASE=${AIRFLOW_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_ROOT_HOST=% 
+  
+  broker:
+    hostname: 'broker'
+    container_name: 'rabbitmq'
+    image: rabbitmq:${RABBITMQ_VERSION}
+    restart: always
+    ports: 
+      - 5672:5672
+  
+  celery:
+    hostname: 'celery'
+    container_name: 'celery'
+    build:
+      context: airflow/
+      dockerfile: Dockerfile
+    image: celery:5
+    depends_on: 
+      - broker
+    restart: always
+    ports: 
+      - 5555:5555
+    environment: 
+      - AIRFLOW__CORE__EXECUTOR=${AIRFLOW__CORE__EXECUTOR}
+      - AIRFLOW__CELERY__CELERY_APP_NAME=${AIRFLOW__CELERY__CELERY_APP_NAME}
+      - AIRFLOW__CELERY__BROKER_URL=${AIRFLOW__CELERY__BROKER_URL}
+      - AIRFLOW__CELERY__WORKER_CONCURRENCY=${AIRFLOW__CELERY__WORKER_CONCURRENCY}
+      - AIRFLOW__CELERY__RESULT_BACKEND=${AIRFLOW__CELERY__RESULT_BACKEND}
+    command: flower
+  
+  airflow:
+    hostname: 'airflow'
+    container_name: 'airflow'
+    build:
+      context: airflow/
+      dockerfile: Dockerfile
+    image: airflow:2.0.1
+    depends_on: 
+      - mysql
+      - broker
+    ports:
+      - "8080:8080"
+    environment: 
+      - AIRFLOW__CORE__DAGS_FOLDER=${AIRFLOW__CORE__DAGS_FOLDER}
+      - AIRFLOW__CORE__PLUGINS_FOLDER=${AIRFLOW__CORE__PLUGINS_FOLDER}
+      - AIRFLOW__LOGGING__BASE_LOG_FOLDER=${AIRFLOW__LOGGING__BASE_LOG_FOLDER}
+      - AIRFLOW__CORE__EXECUTOR=${AIRFLOW__CORE__EXECUTOR}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=${AIRFLOW__CORE__SQL_ALCHEMY_CONN}
+      - AIRFLOW__CORE__LOAD_EXAMPLES=${AIRFLOW__CORE__LOAD_EXAMPLES}
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+    entrypoint: ['bash', 'entrypoint.sh']
